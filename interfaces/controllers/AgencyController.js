@@ -2,9 +2,7 @@ const { StatusCodes } = require("http-status-codes");
 const axios = require("axios");
 
 const AgencyRepository = require("../../infrastructure/repositories/agency");
-
-const SCANNED = 1;
-const SEARCHED = 2;
+const MapCacheRepository = require("../../infrastructure/repositories/map-cache");
 
 const get = async (req, res) => {
   try {
@@ -53,40 +51,17 @@ const kakaoSearch = async (keyword, x, y, radius, page = 1) => {
   return response.data;
 };
 
-// TODO : 영구적으로 저장하는 방식으로 고쳐야 됨.
-function _isSearched(keyword) {
-  if (this.cachedKeyword === undefined) return false;
-  if (this.cachedKeyword[keyword] === undefined) return false;
-  return this.cachedKeyword[keyword] === SEARCHED;
-}
-function _cacheKeyword(keyword) {
-  this.cachedKeyword ??= new Array();
-  this.cachedKeyword[keyword] = SEARCHED;
-}
-
-function _isScanned(lat, lng) {
-  if (this.cachedLatLng === undefined) return false;
-  if (this.cachedLatLng[lat] === undefined) return false;
-  return this.cachedLatLng[lat][lng] === SCANNED;
-}
-function _cacheLatLng(lat, lng) {
-  this.cachedLatLng ??= new Array();
-  this.cachedLatLng[lat] ??= new Array();
-  this.cachedLatLng[lat][lng] = SCANNED;
-}
-
 const search = async (req, res) => {
-  // const y = req.query.y;
-  // const x = req.query.x;
   const y = typeof req.query.y === "undefined" ? -1 : req.query.y;
   const x = typeof req.query.x === "undefined" ? -1 : req.query.x;
   const keyword = typeof req.query.keyword === "undefined" ? "" : req.query.keyword;
 
   const radius = 710;
 
-  if (y > 0 && x > 0 && !_isScanned(y, x)) {
-    _cacheLatLng(y, x);
+  if (y > 0 && x > 0 && (await MapCacheRepository.findPlace({ lat: y, lng: x })) === null) {
     try {
+      await MapCacheRepository.persistPlace({ lat: y, lng: x });
+
       let nextPage = 1;
       while (true) {
         const data = await kakaoSearch(keyword, x, y, radius, nextPage++);
@@ -103,9 +78,10 @@ const search = async (req, res) => {
       console.error(err);
       res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
-  } else if (keyword && !_isSearched(keyword)) {
-    _cacheKeyword(keyword);
+  } else if (keyword && (await MapCacheRepository.findKeyword(keyword)) === null) {
     try {
+      await MapCacheRepository.persistKeyword(keyword);
+
       let nextPage = 1;
       while (true) {
         const data = await kakaoSearch(keyword, x, y, radius, nextPage++);
