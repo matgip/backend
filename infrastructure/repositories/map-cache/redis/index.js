@@ -11,19 +11,19 @@ module.exports = class extends MapCacheRepository {
 
   async persistPlace(latLng) {
     const { lat, lng } = latLng;
-    await client.LPUSH(`cached_places:${lat}:${lng}`, SCANNED);
+    await client.SET(`cached_places:${lat}:${lng}`, SCANNED);
   }
 
   async persistKeyword(keyword) {
-    await client.LPUSH(`cached_keyword:${keyword}`, SEARCHED);
+    await client.SET(`cached_keyword:${keyword}`, SEARCHED);
   }
 
   async findPlace(latLng) {
     const { lat, lng } = latLng;
-    return await client.LINDEX(`cached_places:${lat}:${lng}`, 0);
+    return await client.GET(`cached_places:${lat}:${lng}`, 0);
   }
 
   async findKeyword(keyword) {
-    return await client.LINDEX(`cached_keyword:${keyword}`, 0);
+    return await client.GET(`cached_keyword:${keyword}`, 0);
   }
 };
