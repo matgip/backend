@@ -8,19 +8,26 @@ module.exports = class extends ReviewRepository {
   }
 
   async persist(estateId, reviewEntity) {
-    const { userId, avatar, nickname, time, rating, kindness, price, contract, title, text } = reviewEntity;
+    const { userId, avatar, nickname, time, rating, kindness, price, contract, title, text, ageRange } = reviewEntity;
     await client
       .multi()
+      // 리뷰 내용
+      .HSET(`reviews:${estateId}:users:${userId}`, "title", title)
+      .HSET(`reviews:${estateId}:users:${userId}`, "text", text)
+      // 작성자 정보
       .HSET(`reviews:${estateId}:users:${userId}`, "avatar", avatar)
       .HSET(`reviews:${estateId}:users:${userId}`, "nickname", nickname)
       .HSET(`reviews:${estateId}:users:${userId}`, "time", time)
+      // 세부 리뷰 항목
       .HSET(`reviews:${estateId}:users:${userId}`, "rating", rating)
-      .HSET(`reviews:${estateId}:users:${userId}`, "kindness", kindness)
       .HSET(`reviews:${estateId}:users:${userId}`, "price", price)
+      .HSET(`reviews:${estateId}:users:${userId}`, "kindness", kindness)
       .HSET(`reviews:${estateId}:users:${userId}`, "contract", contract)
-      .HSET(`reviews:${estateId}:users:${userId}`, "title", title)
-      .HSET(`reviews:${estateId}:users:${userId}`, "text", text)
+      // 리뷰 총점
       .INCRBYFLOAT(`reviews:${estateId}:ratings`, rating)
+      // 리뷰 조회
+      .HINCRBY(`reviews:${estateId}:views`, `range:${ageRange.split("~")[0]}`, 1)
+      // 리뷰 좋아요/시간 순 정렬
       .ZADD(`reviews:${estateId}:likes`, [{ score: 0, value: `user:${userId}` }])
       .ZADD(`reviews:${estateId}:time`, [{ score: Math.floor(new Date().getTime() / 1000), value: `user:${userId}` }])
       .exec();
@@ -28,6 +35,8 @@ module.exports = class extends ReviewRepository {
 
   async get(estateId, userId) {
     const review = await client.HGETALL(`reviews:${estateId}:users:${userId}`);
+    // 추가 기능: 리뷰 조회수
+    review.views = await client.HGETALL(`reviews:${estateId}:views`);
     return review;
   }
 
