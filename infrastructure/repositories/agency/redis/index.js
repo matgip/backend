@@ -55,7 +55,6 @@ module.exports = class extends AgencyRepository {
 
   async get(agencyId) {
     const agency = await client.HGETALL(`agencies:${agencyId}`);
-    if (agencyId === "1013765439") console.log("AGENCY: ", agency);
     // Refactoring: combining likes & stars into agency
     agency.likes = 0;
     agency.stars = 0.0;
