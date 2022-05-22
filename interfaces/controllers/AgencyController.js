@@ -18,9 +18,29 @@ const get = async (req, res) => {
   }
 };
 
+const getViews = async (req, res) => {
+  try {
+    const agencyViews = await AgencyRepository.getViews(req.params.id);
+    res.json(agencyViews);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
 const add = async (req, res) => {
   try {
     await AgencyRepository.persist(req.body);
+    res.sendStatus(StatusCodes.OK);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
+const put = async (req, res) => {
+  try {
+    await AgencyRepository.mergeViews(req.body);
     res.sendStatus(StatusCodes.OK);
   } catch (err) {
     console.error(err);
@@ -118,6 +138,8 @@ const search = async (req, res) => {
 
 module.exports = {
   get,
+  getViews,
   add,
+  put,
   search,
 };

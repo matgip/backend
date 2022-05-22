@@ -71,6 +71,16 @@ module.exports = class extends AgencyRepository {
     return agency;
   }
 
+  async getViews(agencyId) {
+    const agencyViews = await client.HGETALL(`agencies:${agencyId}:views`);
+    return agencyViews;
+  }
+
+  async mergeViews(reqEntity) {
+    const { agencyId, ageRange } = reqEntity;
+    await client.HINCRBY(`agencies:${agencyId}:views`, `range:${ageRange.split("~")[0]}`, 1);
+  }
+
   isEmpty(agency) {
     return !agency.id || !agency.y || !agency.x || !agency.place_name || !agency.address_name;
   }
