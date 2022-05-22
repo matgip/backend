@@ -68,12 +68,14 @@ module.exports = class extends AgencyRepository {
         agency.stars = sumOfRatings / userCnt;
       }
     }
+    // 부동산 조회수
+    agency.views = await this.getViews(agencyId);
     return agency;
   }
 
   async getViews(agencyId) {
     const agencyViews = await client.HGETALL(`agencies:${agencyId}:views`);
-    return agencyViews;
+    return agencyViews === undefined ? 0 : agencyViews;
   }
 
   async mergeViews(reqEntity) {
