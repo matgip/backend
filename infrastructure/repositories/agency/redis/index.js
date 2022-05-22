@@ -55,7 +55,7 @@ module.exports = class extends AgencyRepository {
 
   async get(agencyId) {
     const agency = await client.HGETALL(`agencies:${agencyId}`);
-    // Refactoring: combining likes & stars into agency
+    // REFACTORING: Combining (likes/stars) into agency
     agency.likes = 0;
     agency.stars = 0.0;
     if (!this.isEmpty(agency)) {
