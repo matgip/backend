@@ -36,7 +36,10 @@ module.exports = class extends ReviewRepository {
   async get(estateId, userId) {
     const review = await client.HGETALL(`reviews:${estateId}:users:${userId}`);
     // 추가 기능: 리뷰 조회수
-    review.views = await client.HGETALL(`reviews:${estateId}:views`);
+    const views = await client.HGETALL(`reviews:${estateId}:views`);
+    if (Object.keys(views).length !== 0) {
+      review.views = await client.HGETALL(`reviews:${estateId}:views`);
+    }
     return review;
   }
 
