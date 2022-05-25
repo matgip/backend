@@ -79,8 +79,16 @@ module.exports = class extends AgencyRepository {
   }
 
   async mergeViews(reqEntity) {
-    const { agencyId, ageRange } = reqEntity;
-    await client.HINCRBY(`agencies:${agencyId}:views`, `range:${ageRange.split("~")[0]}`, 1);
+    const { agencyId, user } = reqEntity;
+    if (!(await this.isPassed24Hours(agencyId, user.id))) return;
+    await client.HSET(`agencies:${agencyId}:last_view_time`, `users:${user.id}`, new Date().getTime() / 1000);
+    await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
+  }
+
+  async isPassed24Hours(agencyId, userId) {
+    const lastViewTime = await client.HGET(`agencies:${agencyId}:last_view_time`, `users:${userId}`);
+    const currentTime = new Date().getTime() / 1000;
+    return currentTime - lastViewTime > 24 * 3600;
   }
 
   isEmpty(agency) {
