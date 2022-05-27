@@ -12,6 +12,7 @@ const agencyRouter = require("./interfaces/routes/agency");
 const uploadRouter = require("./interfaces/routes/upload");
 const likeRouter = require("./interfaces/routes/like");
 const reviewRouter = require("./interfaces/routes/review");
+const agencyTopHitsViewRouter = require("./interfaces/routes/agencyTopHitsView");
 
 const app = express();
 
@@ -28,12 +29,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/user", userRouter);
-
 app.use("/api/agency", agencyRouter);
 app.use("/api/likes", likeRouter);
 app.use("/api/upload", uploadRouter);
-
 app.use("/api/reviews", reviewRouter);
+app.use("/api/realtime_agencies_views", agencyTopHitsViewRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

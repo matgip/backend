@@ -83,6 +83,8 @@ module.exports = class extends AgencyRepository {
     if (!(await this.isPassed24Hours(agencyId, user.id))) return;
     await client.HSET(`agencies:${agencyId}:last_view_time`, `users:${user.id}`, new Date().getTime() / 1000);
     await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
+    // 실시간 인기 검색어 +1
+    await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
   }
 
   async isPassed24Hours(agencyId, userId) {
