@@ -8,7 +8,12 @@ module.exports = class extends ReviewTimeOrderRepository {
 
   async get(estateId, query) {
     const range = query.range.split("~");
-    const reviewedUsers = await client.ZRANGE_WITHSCORES(`reviews:${estateId}:time`, range[0], range[range.length - 1]);
+    const reviewedUsers = await client.ZRANGE_WITHSCORES(
+      `reviews:${estateId}:time`,
+      range[0],
+      range[range.length - 1],
+      { REV: true }
+    );
     return reviewedUsers;
   }
 };

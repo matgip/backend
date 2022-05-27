@@ -17,7 +17,8 @@ module.exports = class extends ReviewLikeOrderRepository {
     const reviewedUsers = await client.ZRANGE_WITHSCORES(
       `reviews:${estateId}:likes`,
       range[0],
-      range[range.length - 1]
+      range[range.length - 1],
+      { REV: true }
     );
     return reviewedUsers;
   }
