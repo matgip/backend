@@ -4,6 +4,8 @@ const AgencyTopHitsRepository = require("../../../../domain/AgencyTopHitsReposit
 const AgencyRepository = require("../../agency");
 
 module.exports = class extends AgencyTopHitsRepository {
+  baseTime = null;
+
   constructor() {
     super();
   }
