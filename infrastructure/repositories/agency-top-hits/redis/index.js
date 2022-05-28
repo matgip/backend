@@ -3,9 +3,9 @@ const client = require("../../../config/redis/client");
 const AgencyTopHitsRepository = require("../../../../domain/AgencyTopHitsRepository");
 const AgencyRepository = require("../../agency");
 
-module.exports = class extends AgencyTopHitsRepository {
-  baseTime = null;
+let baseTime = new Date().toLocaleDateString();
 
+module.exports = class extends AgencyTopHitsRepository {
   constructor() {
     super();
   }
@@ -22,9 +22,21 @@ module.exports = class extends AgencyTopHitsRepository {
     await Promise.all(
       topHitsAgencies.map(async (scoreValue) => {
         const agency = await AgencyRepository.get(scoreValue.value.split(":")[1]);
-        result.push({ name: agency.place_name, address_name: agency.address_name, views: scoreValue.score });
+        result.push({
+          baseTime: baseTime,
+          name: agency.place_name,
+          address_name: agency.address_name,
+          views: scoreValue.score,
+        });
       })
     );
+    console.log(result);
     return result;
   }
 };
+
+function flush() {
+  baseTime = new Date().toLocaleDateString();
+  client.DEL("realtime_agencies_views");
+}
+setInterval(flush, 24 * 3600 * 1000);
