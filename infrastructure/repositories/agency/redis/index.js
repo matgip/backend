@@ -2,6 +2,8 @@
 const client = require("../../../config/redis/client");
 const AgencyRepository = require("../../../../domain/AgencyRepository");
 
+let baseTime = new Date().toLocaleDateString();
+
 module.exports = class extends AgencyRepository {
   constructor() {
     super();
@@ -78,6 +80,30 @@ module.exports = class extends AgencyRepository {
     return agencyViews === undefined ? 0 : agencyViews;
   }
 
+  async getTopHits(query) {
+    const range = query.range.split("~");
+    const topHitsAgencies = await client.ZRANGE_WITHSCORES(
+      "realtime_agencies_views",
+      range[0],
+      range[range.length - 1],
+      { REV: true }
+    );
+    const result = [];
+    await Promise.all(
+      topHitsAgencies.map(async (scoreValue) => {
+        const agency = await this.get(scoreValue.value.split(":")[1]);
+        result.push({
+          baseTime: baseTime,
+          name: agency.place_name,
+          address_name: agency.address_name,
+          views: scoreValue.score,
+        });
+      })
+    );
+    console.log(result);
+    return result;
+  }
+
   async mergeViews(reqEntity) {
     const { agencyId, user } = reqEntity;
     if (!(await this.isPassed24Hours(agencyId, user.id))) return;
@@ -97,3 +123,9 @@ module.exports = class extends AgencyRepository {
     return !agency.id || !agency.y || !agency.x || !agency.place_name || !agency.address_name;
   }
 };
+
+function flush() {
+  baseTime = new Date().toLocaleDateString();
+  client.DEL("realtime_agencies_views");
+}
+setInterval(flush, 24 * 3600 * 1000);

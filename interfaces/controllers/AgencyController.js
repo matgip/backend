@@ -28,6 +28,16 @@ const getViews = async (req, res) => {
   }
 };
 
+const getTopHits = async (req, res) => {
+  try {
+    const topHitsAgencies = await AgencyRepository.getTopHits(req.query);
+    res.json(topHitsAgencies);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
 const add = async (req, res) => {
   try {
     await AgencyRepository.persist(req.body);
@@ -139,6 +149,7 @@ const search = async (req, res) => {
 module.exports = {
   get,
   getViews,
+  getTopHits,
   add,
   put,
   search,

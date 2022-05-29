@@ -23,6 +23,10 @@ module.exports = class {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 
+  getTopHits(query) {
+    throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
+  }
+
   mergeViews(reqEntity) {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
