@@ -38,10 +38,20 @@ const getLikes = async (req, res) => {
   }
 };
 
-const getTopHits = async (req, res) => {
+const getTopHitAgencies = async (req, res) => {
   try {
-    const topHitsAgencies = await AgencyRepository.getTopHits(req.query);
-    res.json(topHitsAgencies);
+    const topHitAgencies = await AgencyRepository.getTopHitAgencies(req.query);
+    res.json(topHitAgencies);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
+const getTopHitAreas = async (req, res) => {
+  try {
+    const topHitAreas = await AgencyRepository.getTopHitAreas(req.query);
+    res.json(topHitAreas);
   } catch (err) {
     console.error(err);
     res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -171,7 +181,8 @@ module.exports = {
   get,
   getViews,
   getLikes,
-  getTopHits,
+  getTopHitAgencies,
+  getTopHitAreas,
   add,
   put,
   putLikes,

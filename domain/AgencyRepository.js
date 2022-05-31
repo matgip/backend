@@ -27,7 +27,11 @@ module.exports = class {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 
-  getTopHits(query) {
+  getTopHitAgencies(query) {
+    throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
+  }
+
+  getTopHitAreas(query) {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 

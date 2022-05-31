@@ -86,7 +86,7 @@ module.exports = class extends AgencyRepository {
     return await client.SISMEMBER(`agencies:${agencyId}:likes`, `users:${userId}`);
   }
 
-  async getTopHits(query) {
+  async getTopHitAgencies(query) {
     const range = query.range.split("~");
     const topHitsAgencies = await client.ZRANGE_WITHSCORES(
       "realtime_agencies_views",
@@ -109,13 +109,34 @@ module.exports = class extends AgencyRepository {
     return result;
   }
 
+  async getTopHitAreas(query) {
+    const range = query.range.split("~");
+    const topHitsAreas = await client.ZRANGE_WITHSCORES("realtime_area_views", range[0], range[range.length - 1], {
+      REV: true,
+    });
+
+    const result = [];
+    await Promise.all(
+      topHitsAreas.map(async (scoreValue) => {
+        const area = scoreValue.value.split(":")[1];
+        result.push({
+          area: area,
+          views: scoreValue.score,
+        });
+      })
+    );
+    return result;
+  }
+
   async mergeViews(reqEntity) {
-    const { agencyId, user } = reqEntity;
+    const { agencyId, user, addressName } = reqEntity;
     if (!(await this.isPassed24Hours(agencyId, user.id))) return;
     await client.HSET(`agencies:${agencyId}:last_view_time`, `users:${user.id}`, new Date().getTime() / 1000);
     await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
     // 실시간 인기 검색어 +1
     await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
+    const area = this.getArea(addressName);
+    await client.ZINCRBY(`realtime_area_views`, 1, `area:${area}`);
   }
 
   async mergeLikes(agencyId, likeEntity) {
@@ -133,6 +154,11 @@ module.exports = class extends AgencyRepository {
     return { result: "failed" };
   }
 
+  getArea(addressName) {
+    const split = addressName.split(" ");
+    return split.slice(0, split.length - 2).join(" ");
+  }
+
   async isPassed24Hours(agencyId, userId) {
     const lastViewTime = await client.HGET(`agencies:${agencyId}:last_view_time`, `users:${userId}`);
     const currentTime = new Date().getTime() / 1000;
@@ -147,5 +173,6 @@ module.exports = class extends AgencyRepository {
 function flush() {
   baseTime = new Date().toLocaleDateString();
   client.DEL("realtime_agencies_views");
+  client.DEL("realtime_area_views");
 }
 setInterval(flush, 24 * 3600 * 1000);
