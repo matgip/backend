@@ -28,6 +28,16 @@ const getViews = async (req, res) => {
   }
 };
 
+const getLikes = async (req, res) => {
+  try {
+    const agencyLikes = await AgencyRepository.getLikes(req.params.id, req.query.userId);
+    res.json(agencyLikes);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
 const getTopHits = async (req, res) => {
   try {
     const topHitsAgencies = await AgencyRepository.getTopHits(req.query);
@@ -52,6 +62,16 @@ const put = async (req, res) => {
   try {
     await AgencyRepository.mergeViews(req.body);
     res.sendStatus(StatusCodes.OK);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
+const putLikes = async (req, res) => {
+  try {
+    const result = await AgencyRepository.mergeLikes(req.params.id, req.body.user_id);
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -149,8 +169,10 @@ const search = async (req, res) => {
 module.exports = {
   get,
   getViews,
+  getLikes,
   getTopHits,
   add,
   put,
+  putLikes,
   search,
 };

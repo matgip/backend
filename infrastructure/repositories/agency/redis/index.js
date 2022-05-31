@@ -1,5 +1,6 @@
 // Reference: https://www.npmjs.com/package/redis
 const client = require("../../../config/redis/client");
+const sortedSet = require("../../../config/redis/sortedSet");
 const AgencyRepository = require("../../../../domain/AgencyRepository");
 
 let baseTime = new Date().toLocaleDateString();
@@ -81,6 +82,10 @@ module.exports = class extends AgencyRepository {
     return agencyViews === undefined ? 0 : agencyViews;
   }
 
+  async getLikes(agencyId, userId) {
+    return await client.SISMEMBER(`agencies:${agencyId}:likes`, `users:${userId}`);
+  }
+
   async getTopHits(query) {
     const range = query.range.split("~");
     const topHitsAgencies = await client.ZRANGE_WITHSCORES(
@@ -101,7 +106,6 @@ module.exports = class extends AgencyRepository {
         });
       })
     );
-    console.log(result);
     return result;
   }
 
@@ -112,6 +116,15 @@ module.exports = class extends AgencyRepository {
     await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
     // 실시간 인기 검색어 +1
     await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
+  }
+
+  async mergeLikes(agencyId, userId) {
+    const isExist = await this.getLikes(agencyId, userId);
+    if (isExist === true) {
+      return { result: sortedSet.toString(sortedSet.ALREADY_ADDED) };
+    }
+    const result = await client.SADD(`agencies:${agencyId}:likes`, `users:${userId}`);
+    return { result: sortedSet.toString(result) };
   }
 
   async isPassed24Hours(agencyId, userId) {

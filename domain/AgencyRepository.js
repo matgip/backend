@@ -23,11 +23,19 @@ module.exports = class {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 
+  getLikes(agencyId) {
+    throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
+  }
+
   getTopHits(query) {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 
   mergeViews(reqEntity) {
+    throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
+  }
+
+  mergeLikes(agencyId, userId) {
     throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
   }
 };
