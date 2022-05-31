@@ -63,11 +63,12 @@ module.exports = class extends AgencyRepository {
     if (!this.isEmpty(agency)) {
       const likes = await client.SCARD("likes:" + agencyId);
       const sumOfRatings = await client.GET(`reviews:${agencyId}:ratings`);
-      const userCnt = await client.ZCARD(`reviews:${agencyId}:likes`);
+      const reviewCnt = await client.ZCARD(`reviews:${agencyId}:likes`);
 
       agency.likes = likes;
-      if (userCnt != 0) {
-        agency.stars = sumOfRatings / userCnt;
+      agency.reviewCnt = reviewCnt;
+      if (reviewCnt != 0) {
+        agency.stars = sumOfRatings / reviewCnt;
       }
     }
     // 부동산 조회수
