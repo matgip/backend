@@ -62,7 +62,7 @@ module.exports = class extends AgencyRepository {
     agency.likes = 0;
     agency.stars = 0.0;
     if (!this.isEmpty(agency)) {
-      const likes = await client.SCARD("likes:" + agencyId);
+      const likes = await client.SCARD(`agencies:${agencyId}:likes`);
       const sumOfRatings = await client.GET(`reviews:${agencyId}:ratings`);
       const reviewCnt = await client.ZCARD(`reviews:${agencyId}:likes`);
 
