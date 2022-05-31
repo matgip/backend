@@ -118,13 +118,19 @@ module.exports = class extends AgencyRepository {
     await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
   }
 
-  async mergeLikes(agencyId, userId) {
+  async mergeLikes(agencyId, likeEntity) {
+    const { userId, operation } = likeEntity;
     const isExist = await this.getLikes(agencyId, userId);
-    if (isExist === true) {
-      return { result: sortedSet.toString(sortedSet.ALREADY_ADDED) };
+    if (!isExist && operation === "increase") {
+      const result = await client.SADD(`agencies:${agencyId}:likes`, `users:${userId}`);
+      return { result: sortedSet.toString(result) };
     }
-    const result = await client.SADD(`agencies:${agencyId}:likes`, `users:${userId}`);
-    return { result: sortedSet.toString(result) };
+    if (isExist && operation === "decrease") {
+      const result = await client.SREM(`agencies:${agencyId}:likes`, `users:${userId}`);
+      return { result: sortedSet.toString(result) };
+    }
+    // Invalid Operation
+    return { result: "failed" };
   }
 
   async isPassed24Hours(agencyId, userId) {

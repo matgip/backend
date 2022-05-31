@@ -70,7 +70,7 @@ const put = async (req, res) => {
 
 const putLikes = async (req, res) => {
   try {
-    const result = await AgencyRepository.mergeLikes(req.params.id, req.body.user_id);
+    const result = await AgencyRepository.mergeLikes(req.params.id, req.body);
     res.json(result);
   } catch (err) {
     console.error(err);
