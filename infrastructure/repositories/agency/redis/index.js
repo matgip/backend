@@ -94,6 +94,7 @@ module.exports = class extends AgencyRepository {
       range[range.length - 1],
       { REV: true }
     );
+
     const result = [];
     await Promise.all(
       topHitsAgencies.map(async (scoreValue) => {
