@@ -81,12 +81,10 @@ const putLikes = async (req, res) => {
 const KAKAO_REST_KEY = "b912a737eb064082f1aff5d3600bc2be";
 
 const getUrl = (keyword, x, y, radius, page) => {
-  let url = "";
-  if (keyword.length !== 0) {
-    url += `https://dapi.kakao.com/v2/local/search/keyword.json?category\_group\_code=AG2&query=${keyword}&radius=${radius}&page=${page}`;
-  } else {
-    url += `https://dapi.kakao.com/v2/local/search/category.json?category\_group\_code=AG2&x=${x}&y=${y}&radius=${radius}&page=${page}`;
-  }
+  const url =
+    keyword.length !== 0
+      ? `https://dapi.kakao.com/v2/local/search/keyword.json?category\_group\_code=AG2&query=${keyword}&radius=${radius}&page=${page}`
+      : `https://dapi.kakao.com/v2/local/search/category.json?category\_group\_code=AG2&x=${x}&y=${y}&radius=${radius}&page=${page}`;
   return encodeURI(url);
 };
 
@@ -152,13 +150,16 @@ const search = async (req, res) => {
   }
 
   try {
-    let agencies;
-    if (keyword.length !== 0) {
-      agencies = await AgencyRepository.searchByKeyword(keyword);
-    } else {
-      agencies = await AgencyRepository.searchByRadius(y, x, radius);
-    }
-    // const agencies = await AgencyRepository.searchByRadius(y, x, radius);
+    // let agencies;
+    // if (keyword.length !== 0) {
+    //   agencies = await AgencyRepository.searchByKeyword(keyword);
+    // } else {
+    //   agencies = await AgencyRepository.searchByRadius(y, x, radius);
+    // }
+    const agencies =
+      keyword.length !== 0
+        ? await AgencyRepository.searchByKeyword(keyword)
+        : await AgencyRepository.searchByRadius(y, x, radius);
     res.json(agencies);
   } catch (err) {
     console.error(err);
