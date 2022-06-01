@@ -7,15 +7,15 @@ module.exports = class extends ReviewLikeOrderRepository {
     super();
   }
 
-  async update(estateId, userId) {
-    const { user, count } = userId;
-    await client.ZINCRBY(`reviews:${estateId}:likes`, count, `user:${user}`);
+  async update(agencyId, likeEntity) {
+    const { userId, increment } = likeEntity;
+    await client.ZINCRBY(`reviews:${agencyId}:likes`, increment, `user:${userId}`);
   }
 
-  async get(estateId, query) {
+  async get(agencyId, query) {
     const range = query.range.split("~");
     const reviewedUsers = await client.ZRANGE_WITHSCORES(
-      `reviews:${estateId}:likes`,
+      `reviews:${agencyId}:likes`,
       range[0],
       range[range.length - 1],
       { REV: true }

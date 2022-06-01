@@ -7,18 +7,23 @@ module.exports = class extends ReviewUserLikeRepository {
     super();
   }
 
-  async persist(estateId, userId, userLikesEntity) {
-    const { user } = userLikesEntity;
-    const isExist = await this.find(estateId, userId, user);
-    if (isExist === true) {
-      return { result: sortedSet.toString(sortedSet.ALREADY_ADDED) };
-    }
-    const result = await client.SADD(`reviews:${estateId}:users:${userId}:likes`, `users:${user}`);
-    return { result: sortedSet.toString(result) };
+  async get(agencyId, writerId, userId) {
+    return await client.SISMEMBER(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
   }
 
-  async find(estateId, userId, userIdToAdd) {
-    const result = await client.SISMEMBER(`reviews:${estateId}:users:${userId}:likes`, `users:${userIdToAdd}`);
-    return result;
+  async merge(agencyId, writerId, userEntity) {
+    const { userId, operation } = userEntity;
+    const isExist = await this.get(agencyId, writerId, userId);
+    if (!isExist && operation === "increase") {
+      const result = await client.SADD(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
+      console.log("SADD RESULT: ", result);
+      return { result: sortedSet.toString(result) };
+    }
+    if (isExist && operation === "decrease") {
+      const result = await client.SREM(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
+      return { result: sortedSet.toString(result) };
+    }
+    // Invalid Operation
+    return { result: "failed" };
   }
 };
