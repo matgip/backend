@@ -1,6 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 
-const ReviewUserLikeRepository = require("../../infrastructure/repositories/reviews/userLikesCount");
+const ReviewUserLikeRepository = require("../../infrastructure/repositories/reviews/likeOrder");
 
 const isUserLikeWriterReview = async (req, res) => {
   try {
