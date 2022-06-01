@@ -2,9 +2,13 @@ const { StatusCodes } = require("http-status-codes");
 
 const ReviewUserLikeRepository = require("../../infrastructure/repositories/reviews/userLikesCount");
 
-const get = async (req, res) => {
+const isUserLikeWriterReview = async (req, res) => {
   try {
-    const result = await ReviewUserLikeRepository.get(req.params.agencyId, req.params.writerId, req.query.userId);
+    const result = await ReviewUserLikeRepository.isUserLikeWriterReview(
+      req.params.agencyId,
+      req.params.writerId,
+      req.query.userId
+    );
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -12,10 +16,20 @@ const get = async (req, res) => {
   }
 };
 
-const put = async (req, res) => {
+const getUsersByLikeOrder = async (req, res) => {
   try {
-    const result = await ReviewUserLikeRepository.merge(req.params.agencyId, req.params.writerId, req.body);
-    res.json(result);
+    const reviewedUsers = await ReviewUserLikeRepository.getUsers(req.params.agencyId, req.query);
+    res.json(reviewedUsers);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
+const putUserToWriterReview = async (req, res) => {
+  try {
+    await ReviewUserLikeRepository.mergeUserLike(req.params.agencyId, req.params.writerId, req.body);
+    res.sendStatus(StatusCodes.OK);
   } catch (err) {
     console.error(err);
     res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
@@ -23,6 +37,7 @@ const put = async (req, res) => {
 };
 
 module.exports = {
-  get,
-  put,
+  isUserLikeWriterReview,
+  getUsersByLikeOrder,
+  putUserToWriterReview,
 };

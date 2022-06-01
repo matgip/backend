@@ -1,29 +1,43 @@
 const client = require("../../../../config/redis/client");
 const ReviewUserLikeRepository = require("../../../../../domain/ReviewUserLikeRepository");
-const sortedSet = require("../../../../config/redis/sortedSet");
 
 module.exports = class extends ReviewUserLikeRepository {
   constructor() {
     super();
   }
 
-  async get(agencyId, writerId, userId) {
+  async isUserLikeWriterReview(agencyId, writerId, userId) {
     return await client.SISMEMBER(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
   }
 
-  async merge(agencyId, writerId, userEntity) {
-    const { userId, operation } = userEntity;
-    const isExist = await this.get(agencyId, writerId, userId);
+  async getUsers(agencyId, query) {
+    const range = query.range.split("~");
+    const reviewedUsers = await client.ZRANGE_WITHSCORES(
+      `reviews:${agencyId}:likes`,
+      range[0],
+      range[range.length - 1],
+      { REV: true }
+    );
+    return reviewedUsers;
+  }
+
+  async mergeUserLike(agencyId, writerId, userEntity) {
+    const { userId, operation, increment } = userEntity;
+    const isExist = await this.isUserLikeWriterReview(agencyId, writerId, userId);
+    if (!this.isValidRequest(isExist, operation)) return;
+
     if (!isExist && operation === "increase") {
-      const result = await client.SADD(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
-      console.log("SADD RESULT: ", result);
-      return { result: sortedSet.toString(result) };
+      await client.SADD(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
     }
     if (isExist && operation === "decrease") {
-      const result = await client.SREM(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
-      return { result: sortedSet.toString(result) };
+      await client.SREM(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
     }
-    // Invalid Operation
-    return { result: "failed" };
+    await client.ZINCRBY(`reviews:${agencyId}:likes`, increment, `user:${userId}`);
+  }
+
+  isValidRequest(isExist, operation) {
+    if (isExist && operation === "increase") return false;
+    if (!isExist && operation === "decrease") return false;
+    return true;
   }
 };
