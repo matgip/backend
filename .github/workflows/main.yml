@@ -6,10 +6,10 @@ name: BACKEND
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
     types: [closed]
-    branches: [ main ]
+    branches: [main]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -37,6 +37,3 @@ jobs:
             cd ${{ secrets.PROJECT_ROOT_PATH }}
             git fetch
             git pull
-            npm stop
-            npm start
-
