@@ -4,9 +4,7 @@ const NewsExternalAPI = require("../external/news");
 
 const get = async (req, res) => {
   try {
-    const keyword = req.query.keyword;
-    const size = req.query.size;
-    const news = await NewsExternalAPI.get({ keyword, size });
+    const news = await NewsExternalAPI.get({ keyword: req.query.keyword, size: req.query.size });
     res.json(news);
   } catch (err) {
     console.error(err);

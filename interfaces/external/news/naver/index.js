@@ -7,9 +7,9 @@ module.exports = class NewsExternalAPI {
     return `${this.baseURL}?query=${encodeURI(keyword)}&display=${size}&sort=sim`;
   }
 
-  async get(queryEntity) {
-    const { keyword, size } = queryEntity;
-    const resp = await axios({
+  async get(newsEntity) {
+    const { keyword, size } = newsEntity;
+    const response = await axios({
       method: "GET",
       url: this.getUrl(keyword, size),
       headers: {
@@ -17,6 +17,6 @@ module.exports = class NewsExternalAPI {
         "X-Naver-Client-Secret": process.env.NAVER_CLIENT_SECRET,
       },
     });
-    return resp.data;
+    return response.data;
   }
 };

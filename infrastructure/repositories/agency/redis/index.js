@@ -136,8 +136,7 @@ module.exports = class extends AgencyRepository {
     await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
     // 실시간 인기 검색어 +1
     await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
-    const area = this.getArea(addressName);
-    await client.ZINCRBY(`realtime_area_views`, 1, `area:${area}`);
+    await client.ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`);
   }
 
   async mergeLikes(agencyId, likeEntity) {
