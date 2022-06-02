@@ -160,12 +160,6 @@ const search = async (req, res) => {
   }
 
   try {
-    // let agencies;
-    // if (keyword.length !== 0) {
-    //   agencies = await AgencyRepository.searchByKeyword(keyword);
-    // } else {
-    //   agencies = await AgencyRepository.searchByRadius(y, x, radius);
-    // }
     const agencies =
       keyword.length !== 0
         ? await AgencyRepository.searchByKeyword(keyword)
