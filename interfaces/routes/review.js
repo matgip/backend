@@ -10,7 +10,7 @@ router.get("/:agencyId/likes", ReviewUserLikeController.getUsersByLikeOrder);
 router.get("/:agencyId/writers/:writerId/likes", ReviewUserLikeController.isUserLikeWriterReview);
 router.put("/:agencyId/writers/:writerId/likes", ReviewUserLikeController.putUserToWriterReview);
 
-router.get("/:estateId/users/:userId", ReviewController.get);
-router.post("/:estateId/users", ReviewController.add);
+router.get("/:agencyId/users/:userId", ReviewController.getReview);
+router.post("/:agencyId/users", ReviewController.createReview);
 
 module.exports = router;

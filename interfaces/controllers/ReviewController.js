@@ -2,9 +2,9 @@ const { StatusCodes } = require("http-status-codes");
 
 const ReviewRepository = require("../../infrastructure/repositories/reviews/review");
 
-const get = async (req, res) => {
+const getReview = async (req, res) => {
   try {
-    const review = await ReviewRepository.get(req.params.estateId, req.params.userId);
+    const review = await ReviewRepository.get(req.params.agencyId, req.params.userId);
     if (ReviewRepository.isEmpty(review) === true) {
       res.sendStatus(StatusCodes.NO_CONTENT);
       return;
@@ -16,9 +16,9 @@ const get = async (req, res) => {
   }
 };
 
-const add = async (req, res) => {
+const createReview = async (req, res) => {
   try {
-    await ReviewRepository.persist(req.params.estateId, req.body);
+    await ReviewRepository.persist(req.params.agencyId, req.body);
     res.sendStatus(StatusCodes.OK);
   } catch (err) {
     console.error(err);
@@ -27,6 +27,6 @@ const add = async (req, res) => {
 };
 
 module.exports = {
-  get,
-  add,
+  getReview,
+  createReview,
 };
