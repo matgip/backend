@@ -5,12 +5,11 @@ dotenv.config();
 
 const sign = (payload) => {
   return jwt.sign(payload, process.env.TOKEN_SECRET, {
-    expiresIn: "2h",
+    expiresIn: "119m",
   });
 };
 
 const verify = (token) => {
-
   try {
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET);
     return decoded;
@@ -30,10 +29,8 @@ const jwtMiddleware = async (req, res, next) => {
   }
 };
 
-
-
 module.exports = {
   sign,
   verify,
-  jwtMiddleware
+  jwtMiddleware,
 };
