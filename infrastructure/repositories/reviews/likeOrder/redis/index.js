@@ -12,13 +12,9 @@ module.exports = class extends ReviewUserLikeRepository {
 
   async getUsers(agencyId, query) {
     const range = query.range.split("~");
-    const reviewedUsers = await client.ZRANGE_WITHSCORES(
-      `reviews:${agencyId}:likes`,
-      range[0],
-      range[range.length - 1],
-      { REV: true }
-    );
-    return reviewedUsers;
+    return await client.ZRANGE_WITHSCORES(`reviews:${agencyId}:likes`, range[0], range[range.length - 1], {
+      REV: true,
+    });
   }
 
   async mergeUserLike(agencyId, writerId, userEntity) {
