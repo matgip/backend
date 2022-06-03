@@ -50,7 +50,7 @@ const socialLogin = async (req, res) => {
   const token = sign(userInfo);
   // TODO : save token to redis
 
-  res.cookie("JWT", token, { httpOnly: true, expires: 0 }).json(userInfo);
+  res.cookie("JWT", token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 2 }).json(userInfo);
 };
 
 const logout = async (req, res) => {
@@ -64,8 +64,9 @@ const logout = async (req, res) => {
           "Content-type": "application/x-www-form-urlencoded",
         },
       });
+      // res.json(response.data);
+      res.clearCookie("JWT");
       res.json(response.data);
-      // res.status(200).clearCookie("JWT").end();
     } else {
       res.sendStatus(StatusCodes.BAD_REQUEST);
     }
