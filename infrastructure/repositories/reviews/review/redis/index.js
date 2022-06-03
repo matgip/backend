@@ -28,6 +28,9 @@ module.exports = class extends ReviewRepository {
       // 리뷰 좋아요/시간 순 정렬
       .ZADD(`reviews:${agencyId}:likes`, [{ score: 0, value: `user:${userId}` }])
       .ZADD(`reviews:${agencyId}:time`, [{ score: Math.floor(new Date().getTime() / 1000), value: `user:${userId}` }])
+      // 유저가 쓴 리뷰 목록에 추가
+      // TODO: MicroService가 되면 분리되어야 함
+      .SADD(`users:${userId}:reviews`, `reviews:${agencyId}`)
       .exec();
   }
 
