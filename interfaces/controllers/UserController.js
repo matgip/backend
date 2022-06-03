@@ -56,7 +56,7 @@ const socialLogin = async (req, res) => {
 const logout = async (req, res) => {
   try {
     if (req.body.social === "kakao") {
-      await axios({
+      const response = await axios({
         method: "POST",
         url: "https://kapi.kakao.com/v1/user/logout",
         headers: {
@@ -64,8 +64,8 @@ const logout = async (req, res) => {
           "Content-type": "application/x-www-form-urlencoded",
         },
       });
-      // res.json(response.data);
-      res.status(200).clearCookie("JWT").end();
+      res.json(response.data);
+      // res.status(200).clearCookie("JWT").end();
     } else {
       res.sendStatus(StatusCodes.BAD_REQUEST);
     }
