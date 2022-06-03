@@ -64,7 +64,6 @@ const logout = async (req, res) => {
           "Content-type": "application/x-www-form-urlencoded",
         },
       });
-      // res.json(response.data);
       res.clearCookie("JWT");
       res.json(response.data);
     } else {
