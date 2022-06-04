@@ -15,14 +15,14 @@ module.exports = class extends AgencyRepository {
     console.log("agencies persist : " + id + " (" + y + ", " + x + ") " + place_name + " : " + address_name);
     await client
       .multi()
-      .HSET(`agencies:${id}`, "id", id)
-      .HSET(`agencies:${id}`, "y", y)
-      .HSET(`agencies:${id}`, "x", x)
-      .HSET(`agencies:${id}`, "phone", phone)
-      .HSET(`agencies:${id}`, "place_name", place_name)
-      .HSET(`agencies:${id}`, "address_name", address_name)
-      .HSET(`agencies:${id}`, "road_address_name", road_address_name)
-      .geoAdd(`agencies`, {
+      .HSET(`agency:${id}`, "id", id)
+      .HSET(`agency:${id}`, "y", y)
+      .HSET(`agency:${id}`, "x", x)
+      .HSET(`agency:${id}`, "phone", phone)
+      .HSET(`agency:${id}`, "place_name", place_name)
+      .HSET(`agency:${id}`, "address_name", address_name)
+      .HSET(`agency:${id}`, "road_address_name", road_address_name)
+      .geoAdd(`agency`, {
         longitude: x,
         latitude: y,
         member: id,
@@ -46,7 +46,7 @@ module.exports = class extends AgencyRepository {
   }
 
   async searchByRadius(lat, lng, radius) {
-    const ids = await client.GEOSEARCH("agencies", { latitude: lat, longitude: lng }, { radius: radius, unit: "m" });
+    const ids = await client.GEOSEARCH("agency", { latitude: lat, longitude: lng }, { radius: radius, unit: "m" });
     const agencies = [];
     await Promise.all(
       ids.map(async (id) => {
@@ -57,14 +57,14 @@ module.exports = class extends AgencyRepository {
   }
 
   async get(agencyId) {
-    const agency = await client.HGETALL(`agencies:${agencyId}`);
+    const agency = await client.HGETALL(`agency:${agencyId}`);
     // REFACTORING: Combining (likes/stars) into agency
     agency.likes = 0;
     agency.stars = 0.0;
     if (!this.isEmpty(agency)) {
-      const likes = await client.SCARD(`agencies:${agencyId}:likes`);
-      const sumOfRatings = await client.GET(`reviews:${agencyId}:ratings`);
-      const reviewCnt = await client.ZCARD(`reviews:${agencyId}:likes`);
+      const likes = await client.SCARD(`agency:${agencyId}:likes`);
+      const sumOfRatings = await client.GET(`review:${agencyId}:ratings`);
+      const reviewCnt = await client.ZCARD(`review:${agencyId}:likes`);
 
       agency.likes = likes;
       agency.reviewCnt = reviewCnt;
@@ -78,12 +78,12 @@ module.exports = class extends AgencyRepository {
   }
 
   async getViews(agencyId) {
-    const agencyViews = await client.HGETALL(`agencies:${agencyId}:views`);
+    const agencyViews = await client.HGETALL(`agency:${agencyId}:views`);
     return agencyViews === undefined ? 0 : agencyViews;
   }
 
   async getLikes(agencyId, userId) {
-    return await client.SISMEMBER(`agencies:${agencyId}:likes`, `users:${userId}`);
+    return await client.SISMEMBER(`agency:${agencyId}:likes`, `user:${userId}`);
   }
 
   async getTopHitAgencies(query) {
@@ -132,10 +132,10 @@ module.exports = class extends AgencyRepository {
   async mergeViews(reqEntity) {
     const { agencyId, user, addressName } = reqEntity;
     if (!(await this.isPassed24Hours(agencyId, user.id))) return;
-    await client.HSET(`agencies:${agencyId}:last_view_time`, `users:${user.id}`, new Date().getTime() / 1000);
-    await client.HINCRBY(`agencies:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
+    await client.HSET(`agency:${agencyId}:last_view_time`, `user:${user.id}`, new Date().getTime() / 1000);
+    await client.HINCRBY(`agency:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
     // 실시간 인기 검색어 +1
-    await client.ZINCRBY(`realtime_agencies_views`, 1, `agencies:${agencyId}`);
+    await client.ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`);
     await client.ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`);
   }
 
@@ -143,11 +143,11 @@ module.exports = class extends AgencyRepository {
     const { userId, operation } = likeEntity;
     const isExist = await this.getLikes(agencyId, userId);
     if (!isExist && operation === "increase") {
-      const result = await client.SADD(`agencies:${agencyId}:likes`, `users:${userId}`);
+      const result = await client.SADD(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
     if (isExist && operation === "decrease") {
-      const result = await client.SREM(`agencies:${agencyId}:likes`, `users:${userId}`);
+      const result = await client.SREM(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
     // Invalid Operation
@@ -160,7 +160,7 @@ module.exports = class extends AgencyRepository {
   }
 
   async isPassed24Hours(agencyId, userId) {
-    const lastViewTime = await client.HGET(`agencies:${agencyId}:last_view_time`, `users:${userId}`);
+    const lastViewTime = await client.HGET(`agency:${agencyId}:last_view_time`, `user:${userId}`);
     const currentTime = new Date().getTime() / 1000;
     return currentTime - lastViewTime > 24 * 3600;
   }

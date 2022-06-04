@@ -4,9 +4,9 @@ const axios = require("axios");
 const AgencyRepository = require("../../infrastructure/repositories/agency");
 const MapCacheRepository = require("../../infrastructure/repositories/map-cache");
 
-const get = async (req, res) => {
+const getAgency = async (req, res) => {
   try {
-    const agency = await AgencyRepository.get(req.params.id);
+    const agency = await AgencyRepository.get(req.params.agencyId);
     if (AgencyRepository.isEmpty(agency) === true) {
       res.sendStatus(StatusCodes.NO_CONTENT);
       return;
@@ -20,7 +20,7 @@ const get = async (req, res) => {
 
 const getViews = async (req, res) => {
   try {
-    const agencyViews = await AgencyRepository.getViews(req.params.id);
+    const agencyViews = await AgencyRepository.getViews(req.params.agencyId);
     res.json(agencyViews);
   } catch (err) {
     console.error(err);
@@ -30,7 +30,7 @@ const getViews = async (req, res) => {
 
 const getLikes = async (req, res) => {
   try {
-    const agencyLikes = await AgencyRepository.getLikes(req.params.id, req.query.userId);
+    const agencyLikes = await AgencyRepository.getLikes(req.params.agencyId, req.query.userId);
     res.json(agencyLikes);
   } catch (err) {
     console.error(err);
@@ -58,7 +58,7 @@ const getTopHitAreas = async (req, res) => {
   }
 };
 
-const add = async (req, res) => {
+const addAgency = async (req, res) => {
   try {
     await AgencyRepository.persist(req.body);
     res.sendStatus(StatusCodes.OK);
@@ -68,7 +68,7 @@ const add = async (req, res) => {
   }
 };
 
-const put = async (req, res) => {
+const updateViews = async (req, res) => {
   try {
     await AgencyRepository.mergeViews(req.body);
     res.sendStatus(StatusCodes.OK);
@@ -78,9 +78,9 @@ const put = async (req, res) => {
   }
 };
 
-const putLikes = async (req, res) => {
+const updateLikes = async (req, res) => {
   try {
-    const result = await AgencyRepository.mergeLikes(req.params.id, req.body);
+    const result = await AgencyRepository.mergeLikes(req.params.agencyId, req.body);
     res.json(result);
   } catch (err) {
     console.error(err);
@@ -172,13 +172,13 @@ const search = async (req, res) => {
 };
 
 module.exports = {
-  get,
+  getAgency,
   getViews,
   getLikes,
   getTopHitAgencies,
   getTopHitAreas,
-  add,
-  put,
-  putLikes,
+  addAgency,
+  updateViews,
+  updateLikes,
   search,
 };

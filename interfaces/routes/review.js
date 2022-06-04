@@ -6,13 +6,13 @@ const ReviewController = require("../controllers/ReviewController");
 // GET
 router.get("/:agencyId/times", ReviewController.getUsersByTimeOrder);
 router.get("/:agencyId/likes", ReviewController.getUsersByLikeOrder);
-router.get("/:agencyId/writers/:writerId/likes", ReviewController.isUserLikeWriterReview);
-router.get("/:agencyId/users/:userId", ReviewController.getReview);
+router.get("/:agencyId/writer/:writerId/likes", ReviewController.isUserLikeWriterReview);
+router.get("/:agencyId/user/:userId", ReviewController.getReview);
 
 // POST
-router.post("/:agencyId/users", ReviewController.createReview);
+router.post("/:agencyId/user", ReviewController.createReview);
 
 // PUT
-router.put("/:agencyId/writers/:writerId/likes", ReviewController.updateLikeCountOfWriter);
+router.put("/:agencyId/writer/:writerId/likes", ReviewController.updateLikeCountOfWriter);
 
 module.exports = router;

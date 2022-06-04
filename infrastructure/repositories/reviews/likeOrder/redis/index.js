@@ -7,12 +7,12 @@ module.exports = class extends ReviewUserLikeRepository {
   }
 
   async isUserLikeWriterReview(agencyId, writerId, userId) {
-    return await client.SISMEMBER(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
+    return await client.SISMEMBER(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
   }
 
   async getUsers(agencyId, query) {
     const range = query.range.split("~");
-    return await client.ZRANGE_WITHSCORES(`reviews:${agencyId}:likes`, range[0], range[range.length - 1], {
+    return await client.ZRANGE_WITHSCORES(`review:${agencyId}:likes`, range[0], range[range.length - 1], {
       REV: true,
     });
   }
@@ -23,12 +23,12 @@ module.exports = class extends ReviewUserLikeRepository {
     if (!this.isValidRequest(isExist, operation)) return;
 
     if (!isExist && operation === "increase") {
-      await client.SADD(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
+      await client.SADD(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
     }
     if (isExist && operation === "decrease") {
-      await client.SREM(`reviews:${agencyId}:users:${writerId}:likes`, `users:${userId}`);
+      await client.SREM(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
     }
-    await client.ZINCRBY(`reviews:${agencyId}:likes`, increment, `user:${userId}`);
+    await client.ZINCRBY(`review:${agencyId}:likes`, increment, `user:${userId}`);
   }
 
   isValidRequest(isExist, operation) {
