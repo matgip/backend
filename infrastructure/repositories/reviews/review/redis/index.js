@@ -85,10 +85,9 @@ module.exports = class extends ReviewRepository {
 
   async mergeLikeToWriterReview(agencyId, writerId, userEntity) {
     const { userId, operation, increment } = userEntity;
-    const isExist = await this.isUserLikeWriterReview(agencyId, writerId, userId);
-    if (!this._isValidOperation(isExist, operation)) return;
+    if (!(await this._isValidOperation(operation, { agencyId, writerId, userId }))) return;
 
-    if (!isExist && operation === "increase") {
+    if (operation === "increase") {
       // '리뷰 - 좋아요'
       await client
         .multi()
@@ -109,10 +108,13 @@ module.exports = class extends ReviewRepository {
     return Object.keys(result).length === 0;
   }
 
-  _isValidOperation(isExist, operation) {
-    if (isExist && operation === "increase") return false;
-    if (!isExist && operation === "decrease") return false;
-    return true;
+  async _isValidOperation(operation, ids) {
+    const { agencyId, writerId, userId } = ids;
+    const isUserLikeThisReview = await this.isUserLikeWriterReview(agencyId, writerId, userId);
+    if (isUserLikeThisReview && operation === "decrease") return true; //valid
+    if (!isUserLikeThisReview && operation === "increase") return true; //valid
+    // Otherwise invalid
+    return false;
   }
 
   _marshal(dataFromRedis, userId, likes) {
