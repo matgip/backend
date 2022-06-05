@@ -53,7 +53,7 @@ module.exports = class extends ReviewRepository {
     for (let valueWithScore of listOfValueWithScore) {
       const idWithTag = valueWithScore.value;
       const review = await client.HGETALL(`review:${agencyId}:${idWithTag}`);
-      const likes = await client.ZSCORE(`reviews:${agencyId}`, idWithTag);
+      const likes = await client.ZSCORE(`review:${agencyId}:likes`, idWithTag);
       ret.push(this._marshal(review, idWithTag.split(":")[1], likes));
     }
     return ret;
