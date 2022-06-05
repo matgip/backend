@@ -75,14 +75,14 @@ const logout = async (req, res) => {
   }
 };
 
-const get = async (req, res) => {
+const getUserInfo = async (req, res) => {
   try {
     const token = req.cookies["JWT"];
     if (!token) return res.sendStatus(StatusCodes.FORBIDDEN);
     const decoded = verify(token);
     if (!decoded) return res.sendStatus(StatusCodes.FORBIDDEN);
 
-    const user = await UserRepository.get(decoded.id);
+    const user = await UserRepository.getUserInfo(decoded.id);
     console.log("user", user);
     if (UserRepository.isEmpty(user) === true) {
       res.sendStatus(StatusCodes.NO_CONTENT);
@@ -95,8 +95,19 @@ const get = async (req, res) => {
   }
 };
 
+const getReviews = async (req, res) => {
+  try {
+    const response = await UserRepository.getReviews(req.params.userId);
+    res.json(response);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+};
+
 module.exports = {
   socialLogin,
   logout,
-  get,
+  getUserInfo,
+  getReviews,
 };

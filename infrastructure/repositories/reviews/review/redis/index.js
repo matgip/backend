@@ -3,6 +3,8 @@ const client = require("../../../../config/redis/client");
 const ReviewRepository = require("../../../../../domain/ReviewRepository");
 
 module.exports = class extends ReviewRepository {
+  likeCount = new Map();
+
   constructor() {
     super();
   }
@@ -30,7 +32,7 @@ module.exports = class extends ReviewRepository {
       .ZADD(`review:${agencyId}:times`, [{ score: Math.floor(new Date().getTime() / 1000), value: `user:${userId}` }])
       // 유저가 쓴 리뷰 목록에 추가
       // TODO: MicroService가 되면 분리되어야 함
-      .SADD(`user:${userId}:reviews`, `reviews:${agencyId}`)
+      .SADD(`user:${userId}:reviews`, `review:${agencyId}`)
       .exec();
   }
 
@@ -38,7 +40,86 @@ module.exports = class extends ReviewRepository {
     return await client.HGETALL(`review:${agencyId}:user:${userId}`);
   }
 
+  async getUsersByWrittenTimeOrder(agencyId, query) {
+    const ret = [];
+    const range = query.range.split("~");
+    const listOfValueWithScore = await client.ZRANGE_WITHSCORES(
+      `review:${agencyId}:times`,
+      range[0],
+      range[range.length - 1],
+      {
+        REV: true,
+      }
+    );
+
+    for (let valueWithScore of listOfValueWithScore) {
+      const idWithTag = valueWithScore.value;
+      const review = await client.HGETALL(`review:${agencyId}:${idWithTag}`);
+      ret.push(this._marshal(review, idWithTag.split(":")[1]));
+    }
+    return ret;
+  }
+
+  async getUsersByLikeOrder(agencyId, query) {
+    const ret = [];
+    const range = query.range.split("~");
+    const listOfValueWithScore = await client.ZRANGE_WITHSCORES(
+      `review:${agencyId}:likes`,
+      range[0],
+      range[range.length - 1],
+      {
+        REV: true,
+      }
+    );
+
+    for (let valueWithScore of listOfValueWithScore) {
+      const idWithTag = valueWithScore.value;
+      const review = await client.HGETALL(`review:${agencyId}:${idWithTag}`);
+      ret.push(this._marshal(review, idWithTag.split(":")[1], valueWithScore.score));
+    }
+    return ret;
+  }
+
+  async isUserLikeWriterReview(agencyId, writerId, userId) {
+    return await client.SISMEMBER(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
+  }
+
+  async mergeLikeToWriterReview(agencyId, writerId, userEntity) {
+    const { userId, operation, increment } = userEntity;
+    const isExist = await this.isUserLikeWriterReview(agencyId, writerId, userId);
+    if (!this._isValidOperation(isExist, operation)) return;
+
+    if (!isExist && operation === "increase") {
+      await client.SADD(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
+    }
+    if (isExist && operation === "decrease") {
+      await client.SREM(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
+    }
+    await client.ZINCRBY(`review:${agencyId}:likes`, increment, `user:${userId}`);
+  }
+
   isEmpty(result) {
     return Object.keys(result).length === 0;
+  }
+
+  _isValidOperation(isExist, operation) {
+    if (isExist && operation === "increase") return false;
+    if (!isExist && operation === "decrease") return false;
+    return true;
+  }
+
+  _marshal(dataFromRedis, userId, likes) {
+    const ret = Object.assign(dataFromRedis);
+    if (!likes) {
+      // Get by time order
+      ret.likes = this.likeCount.get(`user:${userId}`);
+    } else {
+      // Get by likes order
+      ret.likes = likes;
+      this.likeCount.set(`user:${userId}`, likes);
+    }
+    ret.userId = userId;
+    ret.rating = parseFloat(dataFromRedis.rating);
+    return ret;
   }
 };

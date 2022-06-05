@@ -1,8 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 
 const ReviewRepository = require("../../infrastructure/repositories/reviews/review");
-const ReviewUserLikeRepository = require("../../infrastructure/repositories/reviews/likeOrder");
-const ReviewTimeOrderRepository = require("../../infrastructure/repositories/reviews/timeOrder");
 
 const getReview = async (req, res) => {
   try {
@@ -20,7 +18,7 @@ const getReview = async (req, res) => {
 
 const isUserLikeWriterReview = async (req, res) => {
   try {
-    const result = await ReviewUserLikeRepository.isUserLikeWriterReview(
+    const result = await ReviewRepository.isUserLikeWriterReview(
       req.params.agencyId,
       req.params.writerId,
       req.query.userId
@@ -34,7 +32,7 @@ const isUserLikeWriterReview = async (req, res) => {
 
 const getUsersByLikeOrder = async (req, res) => {
   try {
-    const users = await ReviewUserLikeRepository.getUsers(req.params.agencyId, req.query);
+    const users = await ReviewRepository.getUsersByLikeOrder(req.params.agencyId, req.query);
     res.json(users);
   } catch (err) {
     console.error(err);
@@ -44,7 +42,7 @@ const getUsersByLikeOrder = async (req, res) => {
 
 const getUsersByTimeOrder = async (req, res) => {
   try {
-    const users = await ReviewTimeOrderRepository.getUsers(req.params.agencyId, req.query);
+    const users = await ReviewRepository.getUsersByWrittenTimeOrder(req.params.agencyId, req.query);
     res.json(users);
   } catch (err) {
     console.error(err);
@@ -64,7 +62,7 @@ const createReview = async (req, res) => {
 
 const updateLikeCountOfWriter = async (req, res) => {
   try {
-    await ReviewUserLikeRepository.mergeUserLike(req.params.agencyId, req.params.writerId, req.body);
+    await ReviewRepository.mergeLikeToWriterReview(req.params.agencyId, req.params.writerId, req.body);
     res.sendStatus(StatusCodes.OK);
   } catch (err) {
     console.error(err);

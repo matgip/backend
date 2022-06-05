@@ -19,8 +19,19 @@ module.exports = class extends UserRepository {
       .exec();
   }
 
-  async get(userId) {
+  async getUserInfo(userId) {
     return await client.HGETALL(`user:${userId}`);
+  }
+
+  async getReviews(userId) {
+    const idsWithTag = await client.SMEMBERS(`user:${userId}:reviews`);
+    const reviews = [];
+    await Promise.all(
+      idsWithTag.map(async (idWithTag) => {
+        reviews.push(await client.HGETALL(`${idWithTag}:user:${userId}`));
+      })
+    );
+    return reviews;
   }
 
   isEmpty(result) {
