@@ -3,8 +3,6 @@ const client = require("../../../../config/redis/client");
 const ReviewRepository = require("../../../../../domain/ReviewRepository");
 
 module.exports = class extends ReviewRepository {
-  likeCount = new Map();
-
   constructor() {
     super();
   }
@@ -55,7 +53,8 @@ module.exports = class extends ReviewRepository {
     for (let valueWithScore of listOfValueWithScore) {
       const idWithTag = valueWithScore.value;
       const review = await client.HGETALL(`review:${agencyId}:${idWithTag}`);
-      ret.push(this._marshal(review, idWithTag.split(":")[1]));
+      const likes = await client.ZSCORE(`reviews:${agencyId}`, idWithTag);
+      ret.push(this._marshal(review, idWithTag.split(":")[1], likes));
     }
     return ret;
   }
@@ -110,16 +109,8 @@ module.exports = class extends ReviewRepository {
 
   _marshal(dataFromRedis, userId, likes) {
     const ret = Object.assign(dataFromRedis);
-    if (!likes) {
-      // Get by time order
-      ret.likes = this.likeCount.get(`user:${userId}`);
-    } else {
-      // Get by likes order
-      ret.likes = likes;
-      this.likeCount.set(`user:${userId}`, likes);
-    }
+    ret.likes = likes;
     ret.userId = userId;
-    ret.rating = parseFloat(dataFromRedis.rating);
     return ret;
   }
 };
