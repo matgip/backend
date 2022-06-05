@@ -89,12 +89,20 @@ module.exports = class extends ReviewRepository {
     if (!this._isValidOperation(isExist, operation)) return;
 
     if (!isExist && operation === "increase") {
-      await client.SADD(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
+      // '리뷰 - 좋아요'
+      await client
+        .multi()
+        .SADD(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`)
+        .ZINCRBY(`review:${agencyId}:likes`, increment, `user:${userId}`)
+        .exec();
+    } else {
+      // '리뷰 - 좋아요' 취소
+      await client
+        .multi()
+        .SREM(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`)
+        .ZINCRBY(`review:${agencyId}:likes`, increment, `user:${userId}`)
+        .exec();
     }
-    if (isExist && operation === "decrease") {
-      await client.SREM(`review:${agencyId}:writer:${writerId}:likes`, `user:${userId}`);
-    }
-    await client.ZINCRBY(`review:${agencyId}:likes`, increment, `user:${userId}`);
   }
 
   isEmpty(result) {
