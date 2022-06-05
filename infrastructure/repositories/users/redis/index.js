@@ -28,7 +28,10 @@ module.exports = class extends UserRepository {
     const reviews = [];
     await Promise.all(
       idsWithTag.map(async (idWithTag) => {
-        reviews.push(await client.HGETALL(`${idWithTag}:user:${userId}`));
+        const review = await client.HGETALL(`${idWithTag}:user:${userId}`);
+        const agency = await client.HGETALL(`agency:${idWithTag.split(":")[1]}`);
+        review.agencyName = agency.place_name;
+        reviews.push(review);
       })
     );
     return reviews;
