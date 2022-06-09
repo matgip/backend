@@ -140,20 +140,16 @@ module.exports = class extends AgencyRepository {
       .ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`)
       .ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`)
       .exec();
-    // await client.HSET(`agency:${agencyId}:last_view_time`, `user:${user.id}`, new Date().getTime() / 1000);
-    // await client.HINCRBY(`agency:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
-    // await client.ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`);
-    // await client.ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`);
   }
 
   async mergeLikes(agencyId, likeEntity) {
     const { userId, operation } = likeEntity;
-    const isExist = await this.getLikes(agencyId, userId);
-    if (!isExist && operation === "increase") {
+    if (!(await this._isValidOperation(operation, { agencyId, userId }))) return { result: "failed" };
+    if (operation === "increase") {
       const result = await client.SADD(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
-    if (isExist && operation === "decrease") {
+    if (operation === "decrease") {
       const result = await client.SREM(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
@@ -175,12 +171,19 @@ module.exports = class extends AgencyRepository {
   isEmpty(agency) {
     return !agency.id || !agency.y || !agency.x || !agency.place_name || !agency.address_name;
   }
+
+  async _isValidOperation(operation, ids) {
+    const { agencyId, userId } = ids;
+    const isUserLikeThisAgency = await this.getLikes(agencyId, userId);
+    if (isUserLikeThisAgency && operation === "decrease") return true; //valid
+    if (!isUserLikeThisAgency && operation === "increase") return true; //valid
+    // Otherwise invalid
+    return false;
+  }
 };
 
 function flush() {
   baseTime = new Date().toLocaleDateString();
   client.multi().DEL("realtime_agencies_views").DEL("realtime_area_views").exec();
-  // client.DEL("realtime_agencies_views");
-  // client.DEL("realtime_area_views");
 }
 setInterval(flush, 24 * 3600 * 1000);
