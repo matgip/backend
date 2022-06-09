@@ -146,9 +146,11 @@ module.exports = class extends AgencyRepository {
     const { userId, operation } = likeEntity;
     if (!(await this._isValidOperation(operation, { agencyId, userId }))) return { result: "failed" };
     if (operation === "increase") {
+      // 부동산 '좋아요'
       const result = await client.SADD(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
-    } else (operation === "decrease") {
+    } else {
+      // 부동산 '좋아요' 취소
       const result = await client.SREM(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
