@@ -132,11 +132,18 @@ module.exports = class extends AgencyRepository {
   async mergeViews(reqEntity) {
     const { agencyId, user, addressName } = reqEntity;
     if (!(await this.isPassed24Hours(agencyId, user.id))) return;
-    await client.HSET(`agency:${agencyId}:last_view_time`, `user:${user.id}`, new Date().getTime() / 1000);
-    await client.HINCRBY(`agency:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
-    // 실시간 인기 검색어 +1
-    await client.ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`);
-    await client.ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`);
+    await client
+      .multi()
+      .HSET(`agency:${agencyId}:last_view_time`, `user:${user.id}`, new Date().getTime() / 1000)
+      .HINCRBY(`agency:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1)
+      // 실시간 인기 검색어 +1
+      .ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`)
+      .ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`)
+      .exec();
+    // await client.HSET(`agency:${agencyId}:last_view_time`, `user:${user.id}`, new Date().getTime() / 1000);
+    // await client.HINCRBY(`agency:${agencyId}:views`, `range:${user.userAge.split("~")[0]}`, 1);
+    // await client.ZINCRBY(`realtime_agencies_views`, 1, `agency:${agencyId}`);
+    // await client.ZINCRBY(`realtime_area_views`, 1, `area:${this.getArea(addressName)}`);
   }
 
   async mergeLikes(agencyId, likeEntity) {
@@ -172,7 +179,8 @@ module.exports = class extends AgencyRepository {
 
 function flush() {
   baseTime = new Date().toLocaleDateString();
-  client.DEL("realtime_agencies_views");
-  client.DEL("realtime_area_views");
+  client.multi().DEL("realtime_agencies_views").DEL("realtime_area_views").exec();
+  // client.DEL("realtime_agencies_views");
+  // client.DEL("realtime_area_views");
 }
 setInterval(flush, 24 * 3600 * 1000);
