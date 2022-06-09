@@ -148,13 +148,10 @@ module.exports = class extends AgencyRepository {
     if (operation === "increase") {
       const result = await client.SADD(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
-    }
-    if (operation === "decrease") {
+    } else (operation === "decrease") {
       const result = await client.SREM(`agency:${agencyId}:likes`, `user:${userId}`);
       return { result: sortedSet.toString(result) };
     }
-    // Invalid Operation
-    return { result: "failed" };
   }
 
   getArea(addressName) {
