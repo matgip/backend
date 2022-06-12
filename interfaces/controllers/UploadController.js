@@ -21,6 +21,18 @@ async function get(req, res) {
   }
 }
 
+async function getMarker(req, res) {
+  try {
+    const dirname = "marker";
+    const imagename = req.query.marker;
+    await FileSystemManager.get(dirname, imagename);
+    res.sendFile(FileSystemManager.getFilePath(dirname, imagename));
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+}
+
 async function update(req, res) {
   try {
     const {
@@ -52,6 +64,7 @@ async function remove(req, res) {
 module.exports = {
   middleWare,
   get,
+  getMarker,
   sendResponse,
   update,
   remove,
